@@ -6,8 +6,8 @@ import time
 trajectory = []
 recording = False
 last_move_time = 0
-movement_threshold = 13       # pixels
-stop_delay = 1.5             # seconds before casting
+movement_threshold = 60       # pixels
+stop_delay = 1.0             # seconds before casting
 target_length = 50
 # -----------------------------
 # Load trained model
