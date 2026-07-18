@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hogwarts Spell Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --parch:     #f2e8c9;
+  --parch2:    #e8d9a8;
+  --parch3:    #d4c080;
+  --ink:       #1a1205;
+  --ink-mid:   #3d2e0a;
+  --ink-dim:   #7a6030;
+  --gold:      #c9920a;
+  --gold-l:    #f5d060;
+  --gold-dim:  #8a6010;
+  --crimson:   #8b0000;
+  --crimson-l: #c0392b;
+  --gryff:     #740001;
+  --slytherin: #1a472a;
+  --raven:     #0e1a40;
+  --hufflepuff:#f0c75e;
+  --magic:     #9b59f5;
+  --magic-l:   #d4aaff;
+  --shadow:    #1a120533;
+  --border:    #8a601088;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--parch);
+  color: var(--ink);
+  font-family: 'IM Fell English', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M3 21l4-4 10-10-4-4L3 21zm14-18l1 1-10 10-1-1 10-10z' fill='%23c9920a'/%3E%3C/svg%3E") 2 22, default;
+}
+
+/* ═══ PARCHMENT TEXTURE ═══ */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 28px, #c9920a0a 28px, #c9920a0a 29px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, #8a60100a 40px, #8a60100a 41px),
+    radial-gradient(ellipse at 20% 20%, #e8d9a866 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, #d4c08044 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, #f2e8c9 0%, #e0cf98 100%);
+}
+
+/* ═══ FLOATING PARTICLES ═══ */
+#particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float-up linear infinite;
+  opacity: 0;
+}
+@keyframes float-up {
+  0%   { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: .7; }
+  90%  { opacity: .4; }
+  100% { transform: translateY(-10vh) translateX(60px) rotate(360deg); opacity: 0; }
+}
+
+/* ═══ HOGWARTS CREST HEADER ═══ */
+header {
+  position: relative; z-index: 2;
+  text-align: center;
+  padding: 2rem 1rem 0;
+  animation: fade-down .9s ease both;
+}
+.crest {
+  width: 90px; height: 90px; margin: 0 auto 1rem;
+  filter: drop-shadow(0 4px 12px #c9920a66);
+  animation: crest-glow 3s ease-in-out infinite alternate;
+}
+@keyframes crest-glow {
+  from { filter: drop-shadow(0 4px 12px #c9920a44); }
+  to   { filter: drop-shadow(0 4px 24px #c9920acc); }
+}
+.hogwarts-text {
+  font-family: 'Uncial Antiqua', cursive;
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  letter-spacing: .35em;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-bottom: .3rem;
+}
+h1 {
+  font-family: 'Uncial Antiqua', cursive;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  color: var(--crimson);
+  text-shadow: 2px 2px 0 #f5d06066, 0 4px 20px #8b000044;
+  line-height: 1.1;
+  letter-spacing: .06em;
+}
+.tagline {
+  font-style: italic; color: var(--ink-dim);
+  font-size: 1rem; margin-top: .5rem;
+  letter-spacing: .04em;
+}
+
+/* ═══ HOUSE BANNERS ═══ */
+.house-banners {
+  display: flex; justify-content: center; gap: .6rem;
+  margin: .8rem 0;
+  animation: fade-down .9s .1s ease both;
+}
+.banner {
+  width: 28px; height: 40px; border-radius: 0 0 4px 4px;
+  position: relative; font-size: .5rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 8px var(--shadow);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+}
+.banner-g { background: linear-gradient(to bottom, var(--gryff), #ae0001); }
+.banner-s { background: linear-gradient(to bottom, var(--slytherin), #2e6b41); }
+.banner-r { background: linear-gradient(to bottom, var(--raven), #1c3070); }
+.banner-h { background: linear-gradient(to bottom, #e8a020, var(--hufflepuff)); }
+
+/* ═══ ORNATE DIVIDER ═══ */
+.divider {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; gap: .8rem;
+  max-width: 860px; margin: .6rem auto;
+  padding: 0 1.5rem;
+  animation: fade-down .9s .15s ease both;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-dim), transparent);
+}
+.divider-text {
+  font-family: 'IM Fell English SC', serif;
+  color: var(--gold); font-size: .85rem;
+  letter-spacing: .2em; white-space: nowrap;
+}
+
+/* ═══ MAIN LAYOUT ═══ */
+.page { position: relative; z-index: 2; max-width: 920px; margin: 0 auto; padding: 0 1.2rem 3rem; }
+.grid {
+  display: grid; grid-template-columns: 1fr 310px; gap: 1.4rem;
+  animation: fade-up .9s .2s ease both;
+}
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+/* ═══ SPELL BOOK FRAME ═══ */
+.spellbook-frame {
+  background: var(--parch2);
+  border: 3px solid var(--gold-dim);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px var(--parch3),
+    0 0 0 5px var(--gold-dim),
+    0 0 0 6px var(--parch3),
+    0 8px 32px var(--shadow),
+    inset 0 0 40px #c9920a0a;
+  position: relative;
+}
+.spellbook-frame::before {
+  content: '✦';
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  background: var(--parch2); padding: 0 8px;
+  color: var(--gold); font-size: 1.2rem; z-index: 1;
+}
+/* Corner ornaments */
+.spellbook-frame::after {
+  content: '';
+  position: absolute; inset: 6px;
+  border: 1px solid var(--parch3);
+  pointer-events: none;
+  border-radius: 1px;
+}
+.corner-gem {
+  position: absolute; width: 16px; height: 16px;
+  background: var(--gold);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  z-index: 2;
+}
+.corner-gem.tl { top: -8px; left: -8px; }
+.corner-gem.tr { top: -8px; right: -8px; }
+.corner-gem.bl { bottom: -8px; left: -8px; }
+.corner-gem.br { bottom: -8px; right: -8px; }
+
+/* ═══ VIDEO PANEL ═══ */
+.video-wrap {
+  position: relative; aspect-ratio: 4/3;
+  overflow: hidden; background: #0a0805;
+  border-radius: 1px;
+}
+video, #overlay {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; transform: scaleX(-1);
+}
+#overlay { z-index: 2; }
+.video-wrap::after {
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background:
+    linear-gradient(to bottom, #0a080588 0%, transparent 15%, transparent 85%, #0a080566 100%),
+    linear-gradient(to right,  #0a080555 0%, transparent 8%, transparent 92%, #0a080555 100%);
+}
+.video-wrap.recording {
+  box-shadow: 0 0 0 3px var(--crimson-l), 0 0 30px #c0392b66 inset;
+  animation: cast-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes cast-pulse {
+  from { box-shadow: 0 0 0 3px var(--crimson-l), 0 0 20px #c0392b44 inset; }
+  to   { box-shadow: 0 0 0 3px var(--gold), 0 0 40px #c9920a44 inset; }
+}
+
+/* Status badge */
+.status-badge {
+  position: absolute; top: 10px; left: 10px; z-index: 4;
+  background: #f2e8c9ee; border: 1px solid var(--gold-dim);
+  border-radius: 2px; padding: 4px 12px;
+  font-family: 'IM Fell English SC', serif;
+  font-size: .72rem; letter-spacing: .12em;
+  color: var(--ink-mid); display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.status-badge.casting { color: var(--crimson); border-color: var(--crimson); background: #f2e8c9fa; }
+.s-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-dim); }
+.status-badge.casting .s-dot { background: var(--crimson); box-shadow: 0 0 6px var(--crimson); animation: blink .8s step-end infinite; }
+@keyframes blink { 50% { opacity: 0 } }
+#fps { position: absolute; bottom: 8px; right: 10px; z-index: 4; font-size: .6rem; color: #f2e8c966; font-family: 'IM Fell English SC', serif; }
+
+/* ═══ SIDEBAR CARDS ═══ */
+.sidebar { display: flex; flex-direction: column; gap: 1.2rem; }
+
+.panel {
+  background: var(--parch2);
+  border: 2px solid var(--gold-dim);
+  box-shadow: 0 0 0 1px var(--parch3), 0 4px 16px var(--shadow), inset 0 0 20px #c9920a08;
+  padding: 1rem 1.1rem;
+  position: relative;
+}
+.panel::before {
+  content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px;
+  border: 1px solid var(--parch3); pointer-events: none;
+}
+.panel-title {
+  font-family: 'IM Fell English SC', serif;
+  font-size: .75rem; letter-spacing: .2em;
+  color: var(--gold-dim); margin-bottom: .9rem;
+  text-align: center;
+  border-bottom: 1px solid var(--parch3); padding-bottom: .5rem;
+}
+
+/* ═══ SPELL RESULT ═══ */
+.spell-display { text-align: center; padding: .5rem 0; }
+.spell-icon { font-size: 2.4rem; display: block; margin-bottom: .4rem; transition: all .4s; }
+.spell-name {
+  font-family: 'Uncial Antiqua', cursive;
+  font-size: 1.5rem; color: var(--crimson);
+  text-shadow: 1px 1px 0 #f5d06055;
+  min-height: 2.2rem; line-height: 1.2; transition: all .4s;
+}
+.spell-name.empty {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: .9rem; color: var(--ink-dim);
+}
+.spell-name.flash { animation: spell-reveal .6s ease forwards; }
+@keyframes spell-reveal {
+  0%  { transform: scale(.85); opacity: .3; text-shadow: 0 0 20px var(--magic), 1px 1px 0 #f5d06055; color: var(--magic); }
+  50% { transform: scale(1.1);  opacity: 1;  }
+  100%{ transform: scale(1);    color: var(--crimson); text-shadow: 1px 1px 0 #f5d06055; }
+}
+.spell-latin { font-style: italic; font-size: .75rem; color: var(--ink-dim); margin-top: .2rem; letter-spacing: .05em; }
+
+/* trajectory */
+.traj-wrap { margin-top: .8rem; }
+.traj-labels { display: flex; justify-content: space-between; font-size: .68rem; color: var(--ink-dim); margin-bottom: 4px; font-family: 'IM Fell English SC', serif; }
+.traj-track { height: 6px; background: var(--parch3); border: 1px solid var(--gold-dim); border-radius: 1px; overflow: hidden; }
+.traj-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-l));
+  transition: width .15s; box-shadow: 0 0 8px var(--gold-dim);
+}
+
+/* ═══ BUTTONS ═══ */
+.btn-col { display: flex; flex-direction: column; gap: .6rem; }
+button {
+  width: 100%; padding: .6rem .8rem;
+  font-family: 'IM Fell English SC', serif;
+  font-size: .85rem; letter-spacing: .12em;
+  cursor: pointer; transition: all .2s;
+  border: 2px solid; position: relative; overflow: hidden;
+}
+button::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, #ffffff22, transparent);
+  pointer-events: none;
+}
+#btn-camera {
+  background: linear-gradient(135deg, var(--crimson), #ae0001);
+  border-color: var(--gold-dim); color: var(--gold-l);
+  text-shadow: 0 1px 4px #00000066;
+  box-shadow: 0 4px 12px #8b000044, inset 0 1px 0 #ffffff22;
+}
+#btn-camera:hover { transform: translateY(-1px); box-shadow: 0 6px 20px #8b000066, inset 0 1px 0 #ffffff22; }
+#btn-camera.active {
+  background: linear-gradient(135deg, #2d3a1a, #1a2a10);
+  border-color: var(--slytherin); color: #a8d4a0;
+}
+#btn-reset {
+  background: var(--parch);
+  border-color: var(--parch3); color: var(--ink-mid);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+#btn-reset:hover { border-color: var(--gold-dim); color: var(--ink); }
+
+/* ═══ SERVER ═══ */
+.server-row { display: flex; gap: .5rem; align-items: center; }
+.server-row input {
+  flex: 1; background: var(--parch); border: 1px solid var(--parch3);
+  color: var(--ink-mid); font-family: 'Courier New', monospace;
+  font-size: .7rem; padding: .38rem .6rem; outline: none;
+  transition: border-color .2s;
+}
+.server-row input:focus { border-color: var(--gold-dim); }
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--parch3); flex-shrink: 0; transition: all .3s; }
+.conn-dot.ok  { background: #4a9c62; box-shadow: 0 0 6px #4a9c62; }
+.conn-dot.err { background: var(--crimson-l); box-shadow: 0 0 6px var(--crimson-l); }
+
+/* ═══ HISTORY ═══ */
+.history-scroll {
+  max-height: 170px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--parch3) transparent;
+  display: flex; flex-direction: column; gap: .3rem;
+}
+.history-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .32rem .55rem; background: var(--parch);
+  border-left: 3px solid var(--gold-dim);
+  animation: slide-in .3s ease; font-size: .78rem;
+}
+@keyframes slide-in { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+.hi-spell { color: var(--crimson); font-family: 'Uncial Antiqua', cursive; font-size: .82rem; }
+.hi-time  { color: var(--ink-dim); font-size: .62rem; font-family: 'IM Fell English SC', serif; }
+.no-hist  { color: var(--ink-dim); font-style: italic; text-align: center; padding: .5rem 0; font-size: .8rem; }
+
+/* ═══ FOOTER ═══ */
+footer {
+  position: relative; z-index: 2;
+  text-align: center; margin-top: 1.8rem;
+  font-style: italic; color: var(--ink-dim); font-size: .8rem;
+  letter-spacing: .06em;
+  animation: fade-up .9s .35s ease both;
+}
+footer strong { font-style: normal; color: var(--gold-dim); font-family: 'IM Fell English SC', serif; }
+
+/* ═══ MAGIC FLASH OVERLAY ═══ */
+#magic-flash {
+  position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  background: radial-gradient(ellipse at center, #9b59f544 0%, transparent 70%);
+  opacity: 0; transition: opacity .1s;
+}
+#magic-flash.active { opacity: 1; animation: flash-out .6s ease forwards; }
+@keyframes flash-out { 0%{opacity:1} 100%{opacity:0} }
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes fade-up   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fade-down { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+<div id="magic-flash"></div>
+
+<!-- HOGWARTS CREST SVG -->
+<header>
+  <svg class="crest" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Shield -->
+    <path d="M10 10 L90 10 L90 70 L50 100 L10 70 Z" fill="#f2e8c9" stroke="#c9920a" stroke-width="2.5"/>
+    <path d="M15 15 L85 15 L85 68 L50 95 L15 68 Z" fill="none" stroke="#8a6010" stroke-width="1"/>
+    <!-- Quadrant lines -->
+    <line x1="50" y1="15" x2="50" y2="95" stroke="#c9920a" stroke-width="1.5"/>
+    <line x1="15" y1="55" x2="85" y2="55" stroke="#c9920a" stroke-width="1.5"/>
+    <!-- G: Lion (top left) -->
+    <rect x="15" y="15" width="35" height="40" fill="#740001" opacity=".85"/>
+    <text x="32" y="42" text-anchor="middle" font-size="22" fill="#f5d060">🦁</text>
+    <!-- S: Snake (top right) -->
+    <rect x="50" y="15" width="35" height="40" fill="#1a472a" opacity=".85"/>
+    <text x="67" y="42" text-anchor="middle" font-size="20" fill="#aad4aa">🐍</text>
+    <!-- R: Eagle (bottom left) -->
+    <path d="M15 55 L50 55 L50 68 L32 95 L15 68 Z" fill="#0e1a40" opacity=".85"/>
+    <text x="32" y="78" text-anchor="middle" font-size="18" fill="#aabfe0">🦅</text>
+    <!-- H: Badger (bottom right) -->
+    <path d="M50 55 L85 55 L85 68 L67 95 L50 68 Z" fill="#e8a020" opacity=".85"/>
+    <text x="67" y="78" text-anchor="middle" font-size="18" fill="#1a1205">🦡</text>
+    <!-- H letter -->
+    <text x="50" y="8" text-anchor="middle" font-family="serif" font-size="10" fill="#c9920a" font-weight="bold">H</text>
+    <!-- Stars -->
+    <circle cx="50" cy="10" r="2" fill="#c9920a"/>
+    <circle cx="10" cy="10" r="2" fill="#c9920a"/>
+    <circle cx="90" cy="10" r="2" fill="#c9920a"/>
+  </svg>
+  <div class="hogwarts-text">Hogwarts School of Witchcraft & Wizardry</div>
+  <h1>Spell Detector</h1>
+  <p class="tagline">Raise your wand — the Sorting Hat is watching</p>
+
+  <div class="house-banners">
+    <div class="banner banner-g"></div>
+    <div class="banner banner-s"></div>
+    <div class="banner banner-r"></div>
+    <div class="banner banner-h"></div>
+  </div>
+</header>
+
+<div class="divider"><span class="divider-text">✦ Incantations ✦</span></div>
+
+<div class="page">
+  <div class="grid">
+
+    <!-- VIDEO PANEL -->
+    <div class="spellbook-frame">
+      <span class="corner-gem tl"></span>
+      <span class="corner-gem tr"></span>
+      <span class="corner-gem bl"></span>
+      <span class="corner-gem br"></span>
+      <div class="video-wrap" id="video-wrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+        <div class="status-badge" id="status-badge">
+          <span class="s-dot"></span>
+          <span id="status-text">Awaiting Wizard</span>
+        </div>
+        <div id="fps">— fps</div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- Spell Result -->
+      <div class="panel">
+        <div class="panel-title">✦ Detected Incantation ✦</div>
+        <div class="spell-display">
+          <span class="spell-icon" id="spell-icon">🪄</span>
+          <div class="spell-name empty" id="spell-name">No spell detected…</div>
+          <div class="spell-latin" id="spell-latin">Cast a spell to begin</div>
+        </div>
+        <div class="traj-wrap">
+          <div class="traj-labels">
+            <span>Wand Trail</span>
+            <span id="traj-count">0 pts</span>
+          </div>
+          <div class="traj-track"><div class="traj-fill" id="traj-fill"></div></div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="panel">
+        <div class="panel-title">✦ Controls ✦</div>
+        <div class="btn-col">
+          <button id="btn-camera">🪄 &nbsp;Activate Mirror</button>
+          <button id="btn-reset">↺ &nbsp;Finite Incantatem</button>
+        </div>
+      </div>
+
+      <!-- Server -->
+      <div class="panel">
+        <div class="panel-title">✦ Floo Network ✦</div>
+        <div class="server-row">
+          <div class="conn-dot" id="conn-dot"></div>
+          <input id="server-url" type="text" value="http://localhost:8000" spellcheck="false"/>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="panel" style="flex:1">
+        <div class="panel-title">✦ Spell Ledger ✦</div>
+        <div class="history-scroll" id="history">
+          <div class="no-hist" id="no-hist">The ledger is empty…</div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<footer>
+  <strong>Hogwarts Spell Detector</strong> &nbsp;·&nbsp;
+  Move your hand to trace a spell &nbsp;·&nbsp; Hold still to cast &nbsp;·&nbsp;
+  <em>Draco Dormiens Nunquam Titillandus</em>
+</footer>
+
+<script>
+// ══ CONFIG ══════════════════════════════════════════
+const FRAME_MS  = 150;
+const TRAJ_MAX  = 200;
+
+const SPELL_DATA = {
+  // Map spell names to icons + latin flavour
+  default: { icon: '⚡', latin: 'Incantatio detecta' },
+  Lumos:   { icon: '💡', latin: 'Let there be light' },
+  expelliarmus: { icon: '🌀', latin: 'Disarming charm' },
+  WingardiumLeviosa: { icon: '🪶', latin: 'Levitation charm' },
+  alohomora: { icon: '🔓', latin: 'Unlocking charm' },
+  accio:   { icon: '🧲', latin: 'Summoning charm' },
+  expecto: { icon: '🦌', latin: 'Patronus charm' },
+  avada:   { icon: '💚', latin: 'Unforgivable curse' },
+  crucio:  { icon: '⚡', latin: 'Torture curse' },
+  stupefy: { icon: '💥', latin: 'Stunning spell' },
+  riddikulus:{ icon:'🤡', latin: 'Boggart banishing' },
+  obliviate:{ icon:'🌫️', latin: 'Memory charm' },
+  sectumsempra:{icon:'🗡️', latin: 'Dark slashing hex' },
+};
+
+function getSpellData(name) {
+  if (!name) return SPELL_DATA.default;
+  const key = name.toLowerCase().split(' ')[0];
+  return SPELL_DATA[key] || { icon: '✨', latin: 'Spell incantation' };
+}
+
+// ══ PARTICLES ═══════════════════════════════════════
+const particleContainer = document.getElementById('particles');
+const PARTICLE_COLORS = ['#c9920a','#f5d060','#9b59f5','#ffeeaa','#ffffff','#c9920a'];
+
+function spawnParticle() {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const size = Math.random() * 5 + 2;
+  const color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+  const dur   = Math.random() * 8 + 6;
+  const delay = Math.random() * 6;
+  const left  = Math.random() * 100;
+  p.style.cssText = `
+    width:${size}px; height:${size}px;
+    background:${color}; left:${left}%;
+    animation-duration:${dur}s; animation-delay:${delay}s;
+    box-shadow: 0 0 ${size*2}px ${color};
+  `;
+  particleContainer.appendChild(p);
+  setTimeout(() => p.remove(), (dur + delay) * 1000);
+}
+for (let i = 0; i < 18; i++) setTimeout(spawnParticle, i * 400);
+setInterval(spawnParticle, 1200);
+
+// ══ WAND TRAIL ══════════════════════════════════════
+let trailPoints = [];
+function drawWandTrail(x, y, active) {
+  const mx = x;
+  trailPoints.push({ x: mx, y, t: Date.now() });
+  if (trailPoints.length > 28) trailPoints.shift();
+
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+  // Draw trail
+  if (trailPoints.length > 1) {
+    const now = Date.now();
+    for (let i = 1; i < trailPoints.length; i++) {
+      const p0 = trailPoints[i-1], p1 = trailPoints[i];
+      const age = (now - p1.t) / 800;
+      const alpha = Math.max(0, 1 - age) * (i / trailPoints.length);
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y);
+      ctx.strokeStyle = active
+        ? `rgba(192,57,43,${alpha})`
+        : `rgba(201,146,10,${alpha * .7})`;
+      ctx.lineWidth   = active ? 3 : 2;
+      ctx.lineCap     = 'round';
+      ctx.shadowColor = active ? '#c0392b' : '#c9920a';
+      ctx.shadowBlur  = active ? 12 : 6;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // Wand tip glow
+  const tip = trailPoints[trailPoints.length - 1];
+  if (tip) {
+    const g = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, active ? 22 : 14);
+    g.addColorStop(0, active ? 'rgba(192,57,43,.7)' : 'rgba(201,146,10,.6)');
+    g.addColorStop(1, 'transparent');
+    ctx.beginPath(); ctx.arc(tip.x, tip.y, active ? 22 : 14, 0, Math.PI*2);
+    ctx.fillStyle = g; ctx.fill();
+
+    ctx.beginPath(); ctx.arc(tip.x, tip.y, active ? 5 : 3.5, 0, Math.PI*2);
+    ctx.fillStyle   = active ? '#ffffff' : '#f5d060';
+    ctx.shadowColor = active ? '#c0392b' : '#c9920a';
+    ctx.shadowBlur  = 14; ctx.fill(); ctx.shadowBlur = 0;
+  }
+}
+
+// ══ STATE ════════════════════════════════════════════
+let stream = null, loop = null, lastSpell = '';
+let frameCount = 0, fpsT = Date.now();
+
+const video     = document.getElementById('video');
+const overlay   = document.getElementById('overlay');
+const ctx       = overlay.getContext('2d');
+const videoWrap = document.getElementById('video-wrap');
+const badge     = document.getElementById('status-badge');
+const badgeTxt  = document.getElementById('status-text');
+const spellName = document.getElementById('spell-name');
+const spellIcon = document.getElementById('spell-icon');
+const spellLat  = document.getElementById('spell-latin');
+const trajCount = document.getElementById('traj-count');
+const trajFill  = document.getElementById('traj-fill');
+const btnCamera = document.getElementById('btn-camera');
+const btnReset  = document.getElementById('btn-reset');
+const serverUrl = document.getElementById('server-url');
+const connDot   = document.getElementById('conn-dot');
+const histEl    = document.getElementById('history');
+const fpsBadge  = document.getElementById('fps');
+const magicFlash= document.getElementById('magic-flash');
+
+// ══ CAMERA ═══════════════════════════════════════════
+btnCamera.addEventListener('click', async () => stream ? stopCamera() : await startCamera());
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480 } });
+    video.srcObject = stream;
+    await video.play();
+    overlay.width = 640; overlay.height = 480;
+    btnCamera.innerHTML = '🔮 &nbsp;Deactivate Mirror';
+    btnCamera.classList.add('active');
+    loop = setInterval(sendFrame, FRAME_MS);
+    checkHealth();
+  } catch { alert('The enchanted mirror requires camera access.'); }
+}
+
+function stopCamera() {
+  stream?.getTracks().forEach(t => t.stop());
+  stream = null; clearInterval(loop); loop = null;
+  video.srcObject = null;
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  trailPoints = [];
+  btnCamera.innerHTML = '🪄 &nbsp;Activate Mirror';
+  btnCamera.classList.remove('active');
+  setStatus('Awaiting Wizard', false);
+}
+
+// ══ FRAME SEND ════════════════════════════════════════
+async function sendFrame() {
+  if (!stream) return;
+  const tmp = document.createElement('canvas');
+  tmp.width = 640; tmp.height = 480;
+  tmp.getContext('2d').drawImage(video, 0, 0, 640, 480);
+  const blob = await new Promise(r => tmp.toBlob(r, 'image/jpeg', 0.8));
+  const form = new FormData();
+  form.append('file', blob, 'frame.jpg');
+  try {
+    const res  = await fetch(`${serverUrl.value.replace(/\/$/,'')}/process-frame`, { method:'POST', body:form });
+    const data = await res.json();
+    onFrame(data);
+    connDot.className = 'conn-dot ok';
+  } catch { connDot.className = 'conn-dot err'; }
+  frameCount++;
+  if (Date.now() - fpsT >= 1000) {
+    fpsBadge.textContent = `${frameCount} fps`;
+    frameCount = 0; fpsT = Date.now();
+  }
+}
+
+function onFrame(data) {
+  const rec   = data.recording;
+  const traj  = data.trajectory_length ?? 0;
+  const spell = data.spell ?? '';
+
+  setStatus(rec ? 'Casting…' : 'Standby', rec);
+  trajCount.textContent = `${traj} pts`;
+  trajFill.style.width  = Math.min(100, (traj / TRAJ_MAX) * 100) + '%';
+
+  if (data.index_finger_x != null) {
+    drawWandTrail(data.index_finger_x, data.index_finger_y, rec);
+  } else {
+    trailPoints = [];
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+  }
+
+  if (spell && spell !== lastSpell) {
+    lastSpell = spell;
+    showSpell(spell);
+    addHistory(spell);
+    triggerMagicFlash();
+  }
+}
+
+// ══ STATUS ════════════════════════════════════════════
+function setStatus(label, casting) {
+  badgeTxt.textContent = label;
+  badge.className = 'status-badge' + (casting ? ' casting' : '');
+  videoWrap.className = 'video-wrap' + (casting ? ' recording' : '');
+}
+
+// ══ SPELL REVEAL ═════════════════════════════════════
+function showSpell(spell) {
+  const data = getSpellData(spell);
+  spellIcon.textContent = data.icon;
+  spellLat.textContent  = data.latin;
+  spellName.className   = 'spell-name';
+  spellName.textContent = spell;
+  void spellName.offsetWidth;
+  spellName.classList.add('flash');
+}
+
+function triggerMagicFlash() {
+  magicFlash.classList.remove('active');
+  void magicFlash.offsetWidth;
+  magicFlash.classList.add('active');
+}
+
+// ══ HISTORY ═══════════════════════════════════════════
+function addHistory(spell) {
+  document.getElementById('no-hist')?.remove();
+  const t   = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'history-item';
+  div.innerHTML = `<span class="hi-spell">${spell}</span><span class="hi-time">${t}</span>`;
+  histEl.prepend(div);
+  while (histEl.children.length > 20) histEl.removeChild(histEl.lastChild);
+}
+
+// ══ RESET ═════════════════════════════════════════════
+btnReset.addEventListener('click', async () => {
+  try { await fetch(`${serverUrl.value.replace(/\/$/,'')}/reset`, {method:'POST'}); } catch {}
+  lastSpell = ''; trailPoints = [];
+  spellName.textContent = 'No spell detected…';
+  spellName.className   = 'spell-name empty';
+  spellIcon.textContent = '🪄';
+  spellLat.textContent  = 'Cast a spell to begin';
+  trajFill.style.width  = '0%';
+  trajCount.textContent = '0 pts';
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  setStatus('Awaiting Wizard', false);
+});
+
+// ══ HEALTH ════════════════════════════════════════════
+async function checkHealth() {
+  try {
+    const r = await fetch(`${serverUrl.value.replace(/\/$/,'')}/health`);
+    connDot.className = r.ok ? 'conn-dot ok' : 'conn-dot err';
+  } catch { connDot.className = 'conn-dot err'; }
+}
+checkHealth();
+serverUrl.addEventListener('change', checkHealth);
+</script>
+</body>
+</html>
